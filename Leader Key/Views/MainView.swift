@@ -13,15 +13,22 @@ struct MainView: View {
   @EnvironmentObject var userState: UserState
 
   var body: some View {
-    Text(userState.currentGroup?.key ?? userState.display ?? "●")
-      .fontDesign(.rounded)
-      .fontWeight(.semibold)
-      .font(.system(size: 28, weight: .semibold, design: .rounded))
-      .frame(width: MAIN_VIEW_SIZE, height: MAIN_VIEW_SIZE, alignment: .center)
-      .background(
-        VisualEffectView(material: .hudWindow, blendingMode: .behindWindow)
-      )
-      .clipShape(RoundedRectangle(cornerRadius: 25.0, style: .continuous))
+    ZStack {
+      let text: some View = Text(userState.currentGroup?.key ?? userState.display ?? "●")
+        .fontDesign(.rounded)
+        .fontWeight(.semibold)
+        .font(.system(size: 28, weight: .semibold, design: .rounded))
+      if userState.isLoading {
+        text.pulsate(duration: 0.5)
+      } else {
+        text
+      }
+    }
+    .frame(width: MAIN_VIEW_SIZE, height: MAIN_VIEW_SIZE, alignment: .center)
+    .background(
+      VisualEffectView(material: .hudWindow, blendingMode: .behindWindow)
+    )
+    .clipShape(RoundedRectangle(cornerRadius: 25.0, style: .continuous))
   }
 }
 
