@@ -67,8 +67,8 @@ class AppDelegate: NSObject, NSApplicationDelegate,
     controller.window = window
 
     config.afterReload = { _ in
-      self.state.display = "🔃"
       self.state.isLoading = true
+
       self.show()
       delay(1000) {
         self.hide()
