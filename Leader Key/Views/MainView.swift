@@ -19,7 +19,7 @@ struct MainView: View {
         .fontWeight(.semibold)
         .font(.system(size: 28, weight: .semibold, design: .rounded))
       if userState.isLoading {
-        text.pulsate(duration: 0.5)
+        text.pulsate(duration: 0.3, targetScale: 1.3)
       } else {
         text
       }

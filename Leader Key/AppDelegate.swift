@@ -70,7 +70,8 @@ class AppDelegate: NSObject, NSApplicationDelegate,
       self.state.isLoading = true
 
       self.show()
-      delay(1000) {
+      // Delay for 4 * 300ms to wait for animation to be noticeable
+      delay(1200) {
         self.hide()
         self.state.isLoading = false
       }
