@@ -52,10 +52,9 @@ enum Cheatsheet {
           if action.type == .application && showAppIcons {
             AppIconImage(appPath: action.value, size: iconSize)
           } else {
-            ZStack {
-              Image(systemName: icon)
-                .foregroundStyle(.secondary)
-            }.frame(width: iconSize, height: iconSize, alignment: .center)
+            Image(systemName: icon)
+              .foregroundStyle(.secondary)
+              .frame(width: iconSize, alignment: .center)
           }
           
           Text(action.displayName)
