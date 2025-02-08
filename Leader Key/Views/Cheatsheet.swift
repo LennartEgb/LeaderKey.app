@@ -56,6 +56,10 @@ enum Cheatsheet {
           .foregroundStyle(.secondary)
           .lineLimit(1)
           .truncationMode(.middle)
+        
+        if action.value.hasSuffix(".app") {
+          AppIconImage(appPath: action.value)
+        }
       }
     }
   }
@@ -189,5 +193,48 @@ struct CheatsheetView_Previews: PreviewProvider {
   static var previews: some View {
     Cheatsheet.CheatsheetView()
       .environmentObject(UserState(userConfig: UserConfig()))
+  }
+}
+
+struct AppIconImage: View {
+  let appPath: String
+  let defaultSystemName: String = "questionmark.circle"
+  let size: CGFloat = 32
+
+  var body: some View {
+    let image = if let icon = getAppIcon(path: appPath) {
+      Image(nsImage: icon)
+    } else {
+      Image(systemName: defaultSystemName)
+    }
+    image.resizable()
+      .scaledToFit()
+      .frame(width: size, height: size)
+  }
+  
+  private func getAppIcon(path: String) -> NSImage? {
+    guard FileManager.default.fileExists(atPath: path) else {
+      return nil
+    }
+
+    let icon = NSWorkspace.shared.icon(forFile: path)
+    let resizedIcon = NSImage(size: NSSize(width: size, height: size))
+    resizedIcon.lockFocus()
+    icon.draw(in: NSRect(x: 0, y: 0, width: size, height: size), from: NSRect(x: 0, y: 0, width: icon.size.width, height: icon.size.height), operation: .sourceOver, fraction: 1.0)
+    resizedIcon.unlockFocus()
+    return resizedIcon
+  }
+}
+
+
+struct AppImage_Preview: PreviewProvider {
+  static var previews: some View {
+    let appPaths = ["/Applications/Xcode.app", "/Applications/Safari.app", "/invalid/path"]
+    VStack {
+      ForEach(appPaths, id: \.self) { path in
+        AppIconImage(appPath: path)
+      }
+    }
+    .padding()
   }
 }
