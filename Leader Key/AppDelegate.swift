@@ -67,7 +67,6 @@ class AppDelegate: NSObject, NSApplicationDelegate,
     controller.window = window
 
     config.afterReload = { _ in
-      self.state.display = "🔃"
       self.state.isShowingRefreshState = true
       self.show()
       // Delay for 4 * 300ms to wait for animation to be noticeable
