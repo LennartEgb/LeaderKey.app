@@ -1,6 +1,6 @@
 import Foundation
 
-struct Action: Item, Codable {
+struct Action: Codable {
   var key: String?
   var type: Type
   var label: String?

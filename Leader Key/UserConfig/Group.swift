@@ -1,4 +1,4 @@
-struct Group: Item, Codable {
+struct Group: Codable {
   var key: String?
   var type: Type = .group
   var label: String?
