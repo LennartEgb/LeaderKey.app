@@ -12,51 +12,10 @@ class UserConfig: ObservableObject {
 
   var afterReload: ((_ success: Bool) -> Void)?
 
-  static func defaultDirectory() -> String {
-    let appSupportDir = FileManager.default.urls(
-      for: .applicationSupportDirectory, in: .userDomainMask)[0]
-    let path = (appSupportDir.path as NSString).appendingPathComponent("Leader Key")
-    do {
-      try FileManager.default.createDirectory(atPath: path, withIntermediateDirectories: true)
-    } catch {
-      fatalError("Failed to create config directory")
-    }
-    return path
-  }
-
   func fileURL() -> URL {
     let dir = Defaults[.configDir]
     let filePath = (dir as NSString).appendingPathComponent(fileName)
     return URL(fileURLWithPath: filePath)
-  }
-
-  func configExists() -> Bool {
-    let path = fileURL().path
-    return FileManager.default.fileExists(atPath: path)
-  }
-
-  func bootstrapConfig() throws {
-    guard let data = defaultConfig.data(using: .utf8) else {
-      throw NSError(
-        domain: "UserConfig", code: 1,
-        userInfo: [NSLocalizedDescriptionKey: "Failed to encode default config"])
-    }
-    let url = fileURL()
-    try data.write(to: url, options: [.atomic])
-  }
-
-  func readConfigFile() -> String {
-    do {
-      let path = fileURL().path
-      let str = try String(contentsOfFile: path, encoding: .utf8)
-      return str
-    } catch {
-      let alert = NSAlert()
-      alert.alertStyle = .critical
-      alert.messageText = "\(error)"
-      alert.runModal()
-      return "{}"
-    }
   }
 
   func loadAndWatch() {
@@ -76,13 +35,64 @@ class UserConfig: ObservableObject {
     startWatching()
   }
 
+  func saveConfig() {
+    fileMonitor.stopMonitoring()
+
+    do {
+      let encoder = JSONEncoder()
+      encoder.outputFormatting = [.prettyPrinted, .withoutEscapingSlashes, .sortedKeys]
+      let jsonData = try encoder.encode(root)
+      try jsonData.write(to: fileURL())
+    } catch {
+      handleConfigError(error)
+    }
+
+    // Resume monitoring
+    reloadConfig()
+    startWatching()
+  }
+
+  func reloadConfig() {
+    loadConfig()
+    afterReload?(true)
+  }
+
+  private func configExists() -> Bool {
+    let path = fileURL().path
+    return FileManager.default.fileExists(atPath: path)
+  }
+
+  private func bootstrapConfig() throws {
+    guard let data = defaultConfig.data(using: .utf8) else {
+      throw NSError(
+        domain: "UserConfig", code: 1,
+        userInfo: [NSLocalizedDescriptionKey: "Failed to encode default config"])
+    }
+    let url = fileURL()
+    try data.write(to: url, options: [.atomic])
+  }
+
+  private func readConfigFile() -> String {
+    do {
+      let path = fileURL().path
+      let str = try String(contentsOfFile: path, encoding: .utf8)
+      return str
+    } catch {
+      let alert = NSAlert()
+      alert.alertStyle = .critical
+      alert.messageText = "\(error)"
+      alert.runModal()
+      return "{}"
+    }
+  }
+
   private func startWatching() {
     self.fileMonitor.startMonitoring(fileURL: fileURL()) {
       self.reloadConfig()
     }
   }
 
-  func loadConfig() {
+  private func loadConfig() {
     if FileManager.default.fileExists(atPath: fileURL().path) {
       if let jsonData = readConfigFile().data(using: .utf8) {
         let decoder = JSONDecoder()
@@ -107,27 +117,19 @@ class UserConfig: ObservableObject {
     alert.runModal()
     root = emptyRoot
   }
+}
 
-  func reloadConfig() {
-    loadConfig()
-    afterReload?(true)
-  }
-
-  func saveConfig() {
-    fileMonitor.stopMonitoring()
-
+extension UserConfig {
+  static func defaultDirectory(fileManager: FileManager = FileManager.default) -> String {
+    let appSupportDir = fileManager.urls(
+      for: .applicationSupportDirectory, in: .userDomainMask)[0]
+    let path = (appSupportDir.path as NSString).appendingPathComponent("Leader Key")
     do {
-      let encoder = JSONEncoder()
-      encoder.outputFormatting = [.prettyPrinted, .withoutEscapingSlashes, .sortedKeys]
-      let jsonData = try encoder.encode(root)
-      try jsonData.write(to: fileURL())
+      try fileManager.createDirectory(atPath: path, withIntermediateDirectories: true)
     } catch {
-      handleConfigError(error)
+      fatalError("Failed to create config directory")
     }
-
-    // Resume monitoring
-    reloadConfig()
-    startWatching()
+    return path
   }
 }
 
